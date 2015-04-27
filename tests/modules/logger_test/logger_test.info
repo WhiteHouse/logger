@@ -1,0 +1,6 @@
+name = Logger tests
+description = Support module for logger testing.
+core = 7.x
+dependencies[] = logger
+package = Testing
+hidden = TRUE

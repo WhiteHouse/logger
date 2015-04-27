@@ -1,0 +1,134 @@
+<?php
+
+/**
+ * @file
+ * Tests for Logger module.
+ */
+
+/**
+ * Unit tests for Logger.
+ */
+class LoggerUnitTestCase extends DrupalUnitTestCase {
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'Logger unit tests',
+      'description' => 'Test Logger classes and functions.',
+      'group' => 'Logger',
+    );
+  }
+
+  /**
+   * Test valid arguments for logger_event().
+   */
+  public function testValidLoggerEventFunction() {
+    $test_cases = array();
+    $test_cases[] = array(
+      'name' => 'test.valid_logger_event.name',
+      'type' => 'count',
+      'value' => 10,
+    );
+
+    foreach ($test_cases as $test_case) {
+      try {
+        logger_event($test_case['name'], $test_case['type'], $test_case['value']);
+        $this->pass('Passed with valid "type" and "value" parameters');
+      }
+      catch (InvalidArgumentException $e) {
+        $this->fail($e->getMessage());
+      }
+    }
+  }
+
+  /**
+   * INVALID arguments for logger_event() are expected to throw exceptions.
+   */
+  public function testinvalidLoggerEventFunction() {
+    $test_cases = array();
+    $test_cases[] = array(
+      'name' => 'test.invalid_logger_event.name',
+      'type' => '',
+      'value' => '',
+      'success_message' => t('Correctly threw exception for empty "value" parameter.'),
+      'failure_message' => t('Incorrectly accepted an empty "value" parameter.'),
+    );
+    $test_cases[] = array(
+      'name' => 'test.invalid_logger_event.name',
+      'type' => 'invalidType',
+      'value' => 10,
+      'success_message' => t('Correctly threw exception for "type" parameter value not found in the $valid_types array.'),
+      'failure_message' => t('Incorrectly accepted a "type" parameter value not found in the $valid_types array.'),
+    );
+    $test_cases[] = array(
+      'name' => 'test.invalid_logger_event.name',
+      'type' => 'count',
+      'value' => 'invalidValue',
+      'success_message' => t('Correctly threw exception for a non-integer "value" parameter value.'),
+      'failure_message' => t('Incorrectly accepted a non-integer "value" parameter value.'),
+    );
+
+    foreach ($test_cases as $test_case) {
+      try {
+        logger_event($test_case['name'], $test_case['type'], $test_case['value']);
+        $this->fail($test_case['failure_message']);
+      }
+      catch (InvalidArgumentException $e) {
+        $this->pass($test_case['success_message'] . ' Exception messge: ' .
+          $e->getMessage());
+      }
+    }
+  }
+
+}
+
+
+/**
+ * Functional tests for Logger.
+ */
+class LoggerWebTestCase extends DrupalWebTestCase {
+  protected $privilegedUser;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'Logger functional tests',
+      'description' => 'Test the functionality of Logger.',
+      'group' => 'Logger',
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setUp() {
+    parent::setUp('logger_test');
+    $permissions = array('access content');
+    $this->privilegedUser = $this->drupalCreateUser($permissions);
+    $this->drupalLogin($this->privilegedUser);
+  }
+
+  /**
+   * Test hook_logger_event().
+   *
+   * @see logger_test_logger_event()
+   */
+  public function testHookLoggerEvent() {
+    $expected_name = 'test.hook_logger_event.name';
+    $expected_type = 'count';
+    $expected_value = 100;
+    logger_event($expected_name, $expected_type, $expected_value);
+    $actual_name = variable_get('logger_test_name');
+    $actual_type = variable_get('logger_test_type');
+    $actual_value = variable_get('logger_test_value');
+
+    $this->assertEqual($actual_name, $expected_name, 'calling hook_logger_event with name ' . $expected_name);
+    $this->assertEqual($actual_type, $expected_type, 'calling hook_logger_event with type ' . $expected_type);
+    $this->assertEqual($actual_value, $expected_value, 'calling hook_logger_event with value ' . $expected_value);
+  }
+
+}

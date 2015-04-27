@@ -1,0 +1,15 @@
+<?php
+
+/**
+ * @file
+ * Test implementation of hook_logger_event(), used for simpletest.
+ */
+
+/**
+ * Implements hook_logger_event().
+ */
+function logger_test_logger_event($name, $type, $value) {
+  variable_set('logger_test_name', $name);
+  variable_set('logger_test_type', $type);
+  variable_set('logger_test_value', $value);
+}

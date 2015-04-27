@@ -1,0 +1,6 @@
+name = Logger
+description = Provides event logging facilities decoupled from storage backend.
+core = 7.x
+files[] = tests/logger.test
+package = Developer
+configure = admin/config/development/logging

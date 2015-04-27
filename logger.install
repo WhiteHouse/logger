@@ -1,0 +1,17 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the Logger module.
+ */
+
+/**
+ * Implements hook_uninstall().
+ */
+function logger_uninstall() {
+  // Delete persistent variables.
+  db_delete('variable')
+    ->condition('name', db_like('logger_') . '%', 'LIKE')
+    ->execute();
+  cache_clear_all('variables', 'cache_bootstrap');
+}
