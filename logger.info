@@ -1,0 +1,4 @@
+name = Logger
+description = Provides additional application logging functionality.
+package = Developer
+core = 7.x
