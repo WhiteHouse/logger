@@ -47,7 +47,6 @@ function logger_event($name, $type = 'count', $value = NULL) {
   }
 
   // Conditionally log events to watchdog for debugging purposes.
-  // Note: This variable has no UI.
   if (variable_get('logger_debug', FALSE)) {
     watchdog('logger', 'Logger Event: @name | @type | @value', array(
       '@name' => $name,
@@ -72,4 +71,18 @@ function logger_filter_metric($name) {
   // Replace dots with underscores.
   $filtered_name = str_replace('.', '_', $name);
   return $filtered_name;
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function logger_form_system_logging_settings_alter(&$form, &$form_state, $form_id) {
+  $form['logger_debug'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable Logger debugging'),
+    '#options' => array(
+      'logger_debug',
+    ),
+    '#description' => t('Enabling this option will log Logger events to Watchdog.'),
+  );
 }
