@@ -54,6 +54,11 @@ function logger_event($name, $type = 'count', $value = NULL) {
 /**
  * Filters a given event metric name.
  *
+ * Removes invalid characters from metric names based on the acceptable name
+ * formats that Graphite can handle.  The regex expressions  used are based upon
+ * @link https://github.com/etsy/statsd/issues/110 this issue @endlink filed to
+ * the  StatsD codebase.
+ *
  * @param string $name
  *   The metric name to filter.
  *
@@ -61,8 +66,15 @@ function logger_event($name, $type = 'count', $value = NULL) {
  *   The filtered metric name.
  */
 function logger_filter_metric($name) {
-  // Replace dots with underscores.
-  $filtered_name = str_replace('.', '_', $name);
+  // Remove invalid characters.
+  $filtered_name = preg_replace('/\s+/', '_', $name);
+  $filtered_name = preg_replace('/\//', '-', $filtered_name);
+  $filtered_name = preg_replace('/[^a-zA-Z_\-0-9\.]/', '', $filtered_name);
+
+  // Replace any remaining dots with underscores to prevent creating unnecessary
+  // path components.
+  $filtered_name = str_replace('.', '_', $filtered_name);
+
   return $filtered_name;
 }
 
