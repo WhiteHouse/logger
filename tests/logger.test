@@ -1,0 +1,176 @@
+<?php
+
+/**
+ * @file
+ * Tests for Logger module.
+ */
+
+/**
+ * Unit tests for Logger.
+ */
+class LoggerUnitTestCase extends DrupalUnitTestCase {
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'Logger unit tests',
+      'description' => 'Test Logger classes and functions.',
+      'group' => 'Logger',
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setUp() {
+    drupal_load('module', 'logger');
+    drupal_load('module', 'logger_test');
+    parent::setUp();
+  }
+
+  /**
+   * Test logger_filter_metric().
+   */
+  public function testLoggerFilterMetricFunction() {
+    $test_cases = array(
+      // The following should remain unchanged:
+      'abcdefghi' => 'abcdefghi',
+      'abc-def_ghi' => 'abc-def_ghi',
+      'abc.def.ghi' => 'abc.def.ghi',
+      // Replace any dots with underscores:
+      'abc.def.ghi' => 'abc_def_ghi',
+      // Invalid characters at the start and end of a line:
+      '~abc.def.ghi' => 'abc_def_ghi',
+      '~~abc.def.ghi' => 'abc_def_ghi',
+      'abc.def.ghi~' => 'abc_def_ghi',
+      'abc.def.ghi~~' => 'abc_def_ghi',
+      // Consecutive invalid characters:
+      'abc..def~~@.ghi' => 'abc__def_ghi',
+      // Odd ascii characters:
+      'abc!%&def()*!@#$%^&*ghi' => 'abcdefghi',
+      // No valid characters:
+      '"]~@' => '',
+    );
+    foreach ($test_cases as $test_case => $expected) {
+      $actual = logger_filter_metric($test_case);
+      $message = 'Ensure ' . $test_case . ' filters to: ' . $expected . '. ($actual: ' . $actual . ')';
+      $this->assertEqual($expected, $actual, $message);
+    }
+
+    // @todo: is there a documented max character limit for StatsD or grpahite?
+    // @todo: is there a better way to test filtering of long strings?
+    $long_string = $this->randomString(10000);
+    $output = logger_filter_metric($long_string);
+    $this->assertNotNull($output, 'Long string (' . strlen($long_string) . ' characters) filters to: ' . strlen($output) . ' characters.');
+  }
+
+  /**
+   * Test valid arguments for logger_event().
+   */
+  public function testValidLoggerEventFunction() {
+    $test_cases = array();
+    $test_cases[] = array(
+      'name' => $this->randomName(5),
+      'type' => 'count',
+      'value' => rand(0,100),
+    );
+
+    foreach ($test_cases as $test_case) {
+      try {
+        logger_event($test_case['name'], $test_case['type'], $test_case['value']);
+        $this->pass("Passed with valid paramters");
+      }
+      catch (InvalidArgumentException $e) {
+        $this->fail($e->getMessage());
+      }
+    }
+  }
+
+  /**
+   * INVALID arguments for logger_event() are expected to throw exceptions.
+   */
+  public function testinvalidLoggerEventFunction() {
+    $test_cases = array();
+    $test_cases[] = array(
+      'name' => $this->randomName(5),
+      'type' => '',
+      'value' => '',
+    );
+    $test_cases[] = array(
+      'name' => $this->randomName(5),
+      'type' => 'invalidType',
+      'value' => rand(),
+    );
+    $test_cases[] = array(
+      'name' => $this->randomName(5),
+      'type' => 'count',
+      'value' => 'invalidValue',
+    );
+
+    foreach ($test_cases as $test_case) {
+      try {
+        logger_event($test_case['name'], $test_case['type'], $test_case['value']);
+        $this->fail("Expected exception for invalid paramter(s)");
+      }
+      catch (InvalidArgumentException $e) {
+        $this->pass('Passed, expecting exception: ' . $e->getMessage());
+      }
+    }
+  }
+}
+
+
+/**
+ * Functional tests for Logger.
+ */
+class LoggerWebTestCase extends DrupalWebTestCase {
+  protected $privilegedUser;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'Logger functional tests',
+      'description' => 'Test the functionality of Logger.',
+      'group' => 'Logger',
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setUp() {
+    parent::setUp('logger_test');
+    $permissions = array('access content');
+    $this->privilegedUser = $this->drupalCreateUser($permissions);
+    $this->drupalLogin($this->privilegedUser);
+  }
+
+  /**
+   * Test hook_logger_event().
+   *
+   * @see logger_test_logger_event()
+   */
+  public function testHookLoggerEvent() {
+    // Set logger_test_variables to FALSE. Upon hook_logger_event(), the module
+    // logger test will set the variable to the provided values.
+    variable_set('logger_test_name', FALSE);
+    variable_set('logger_test_type', FALSE);
+    variable_set('logger_test_value', FALSE);
+
+    $expected_name = $this->randomName(10);
+    $expected_type = 'count';
+    $expected_value = rand(0, 100);
+    logger_event($expected_name, $expected_type, $expected_value);
+    $actual_name = variable_get('logger_test_name');
+    $actual_type = variable_get('logger_test_type');
+    $actual_value = variable_get('logger_test_value');
+
+    $this->assertEqual($actual_name, $expected_name, 'calling hook_logger_event with name ' . $expected_name);
+    $this->assertEqual($actual_type, $expected_type, 'calling hook_logger_event with type ' . $expected_type);
+    $this->assertEqual($actual_value, $expected_value, 'calling hook_logger_event with value ' . $expected_value);
+  }
+}

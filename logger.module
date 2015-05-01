@@ -31,12 +31,14 @@ function logger_event($name, $type = 'count', $value = NULL) {
   // Assert valid event type.
   $valid_types = array('count', 'gauge', 'set', 'time');
   if (!in_array($type, $valid_types)) {
-    throw new InvalidArgumentException('Invalid event type: ' . $type . '.');
+    $message = (empty($type) ? 'event type cannot be blank' : 'Invalid event type: ' . $type . '.');
+    throw new InvalidArgumentException($message);
   }
 
   // Assert valid event value.
   if (!is_null($value) && !is_int($value)) {
-    throw new InvalidArgumentException('Invalid event value: ' . $value . '.');
+    $message = (empty($value) ? 'event type cannot be blank' : 'Invalid event type: ' . $value . '.');
+    throw new InvalidArgumentException($message);
   }
 
   // Conditionally log events to watchdog for debugging purposes.
