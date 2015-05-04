@@ -1,0 +1,89 @@
+<?php
+
+/**
+ * @file
+ * Logging facilities for Logger.
+ */
+
+/**
+ * Implements hook_hook_info_alter().
+ */
+function logger_hook_info_alter(&$hooks) {
+  // Check HOOK.form.inc files for hook_form_alter() implementations.
+  $hooks['form_alter']['group'] = 'form';
+}
+
+/**
+ * Logs a system event.
+ *
+ * @param string $name
+ *   The name of the event you want to log.
+ * @param string $type
+ *   (optional) The type of metric to log--one of the following values
+ *   corresponding to the
+ *   @link https://github.com/etsy/statsd/blob/master/docs/metric_types.md StatsD Metric Types @endlink
+ *   :
+ *   - count: The corresponding value is a number by which to increment (or
+ *     decrement, if negative) a simple counter.
+ *   - gauge: The corresponding value is a single datum, which remains constant
+ *     until explicitly changed.
+ *   - set: The corresponding value is a value to add to a set of unique values.
+ *   - time: The corresponding value is a duration in milliseconds.
+ *
+ * @param int|null $value
+ *   (optional) The numeric value you wish to log. Defaults to 1.
+ *
+ * @see hook_logger_event()
+ */
+function logger_event($name, $type = 'count', $value = NULL) {
+  // Assert valid event type.
+  $valid_types = array('count', 'gauge', 'set', 'time');
+  if (!in_array($type, $valid_types)) {
+    $message = (empty($type) ? 'event type cannot be blank' : 'Invalid event type: ' . $type . '.');
+    throw new InvalidArgumentException($message);
+  }
+
+  // Assert valid event value.
+  if (!is_null($value) && !is_int($value)) {
+    $message = (empty($value) ? 'event type cannot be blank' : 'Invalid event type: ' . $value . '.');
+    throw new InvalidArgumentException($message);
+  }
+
+  // Conditionally log events to watchdog for debugging purposes.
+  if (variable_get('logger_debug', FALSE)) {
+    watchdog('logger', 'Logger Event: @name | @type | @value', array(
+      '@name' => $name,
+      '@type' => $type,
+      '@value' => is_null($value) ? 'NULL' : $value,
+    ), WATCHDOG_DEBUG);
+  }
+
+  module_invoke_all('logger_event', $name, $type, $value);
+}
+
+/**
+ * Filters a given event metric name.
+ *
+ * Removes invalid characters from metric names based on the acceptable name
+ * formats that Graphite can handle.  The regex expressions  used are based upon
+ * @link https://github.com/etsy/statsd/issues/110 this issue @endlink filed to
+ * the  StatsD codebase.
+ *
+ * @param string $name
+ *   The metric name to filter.
+ *
+ * @return string
+ *   The filtered metric name.
+ */
+function logger_filter_metric($name) {
+  // Remove invalid characters.
+  $filtered_name = preg_replace('/\s+/', '_', $name);
+  $filtered_name = preg_replace('/\//', '-', $filtered_name);
+  $filtered_name = preg_replace('/[^a-zA-Z_\-0-9\.]/', '', $filtered_name);
+
+  // Replace any remaining dots with underscores to prevent creating unnecessary
+  // path components.
+  $filtered_name = str_replace('.', '_', $filtered_name);
+
+  return $filtered_name;
+}
