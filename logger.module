@@ -67,3 +67,66 @@ function logger_event($name, $type = 'count', $value = 1) {
 
   module_invoke_all('logger_event', $name, $type, $value);
 }
+
+/**
+ * Logs an event at the start of a process.
+ *
+ * @param string $process_name
+ *   The 'process_name' component used in the logger event name.
+ * @param string $group
+ *   (optional) The 'group' component used in the logger event name. Defaults to
+ *   'logger'.
+ */
+function logger_log_process_start($process_name, $group = 'logger') {
+  // Cleanup existing timers with the same name to prevent accumulation.
+  $timer_name = logger_process_timer_name($process_name);
+  logger_timer_destroy($timer_name);
+  logger_event("processes.{$group}.{$process_name}.invoked");
+  timer_start($timer_name);
+}
+
+/**
+ * Logs an event at the end of a process and the time elapsed.
+ *
+ * @param string $process_name
+ *   The 'process_name' component used in the logger event name.
+ * @param string $group
+ *   (optional) The 'group' component used in the logger event name. Defaults to
+ *   'logger'.
+ * @param string $status
+ *   (optional) The 'status' component used in the logger event name. Defaults
+ *   to 'ok'.
+ */
+function logger_log_process_end($process_name, $group = 'logger', $status = 'ok') {
+  $timer_name = logger_process_timer_name($process_name);
+  timer_stop($timer_name);
+  logger_event("processes.{$group}.{$process_name}.time_to_complete", 'time', (int) timer_read($timer_name));
+  logger_event("processes.{$group}.{$process_name}.completed");
+  logger_event("processes.{$group}.{$process_name}.statuses.{$status}");
+  logger_timer_destroy($timer_name);
+}
+
+/**
+ * Formats a timer name.
+ *
+ * @param string $process_name
+ *   The name of the process to use in naming the timer.
+ *
+ * @return string
+ *   The formatted timer name.
+ */
+function logger_process_timer_name($process_name) {
+  if (is_string($process_name)) {
+    return 'logger_process_timer_' . $process_name;
+  }
+}
+
+/**
+ * Unsets the variable for a given timer.
+ *
+ * @param string $timer_name
+ *   The name of the timer to destroy.
+ */
+function logger_timer_destroy($timer_name) {
+  unset($GLOBALS['timers'][$timer_name]);
+}
