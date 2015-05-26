@@ -76,7 +76,7 @@ class LoggerUnitTestCase extends DrupalUnitTestCase {
         $this->fail($test_case['failure_message']);
       }
       catch (InvalidArgumentException $e) {
-        $this->pass($test_case['success_message'] . ' Exception messge: ' .
+        $this->pass($test_case['success_message'] . ' Exception message: ' .
           $e->getMessage());
       }
     }
