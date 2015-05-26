@@ -54,7 +54,8 @@ function example_logger_event($name, $type = 'count', $value = 1) {
 ```
 
 Event names should be [Graphite](http://graphite.readthedocs.org/)-compatible,
-i.e., paths delimited by dots (`.`). See [Getting Your Data Into Graphite: Step 1]
+i.e., paths delimited by dots (`.`). See
+[Getting Your Data Into Graphite: Step 1]
 (http://graphite.readthedocs.org/en/latest/feeding-carbon.html#step-1-plan-a-naming-hierarchy)
 for some helpful advice.
 

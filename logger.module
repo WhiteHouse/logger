@@ -29,7 +29,7 @@ function logger_hook_info_alter(&$hooks) {
  * @param string $name
  *   The name of the event you want to log.
  * @param string $type
- *   (optional) The type of metric to log--one of the following values
+ *   (Optional) The type of metric to log--one of the following values
  *   corresponding to the
  *   @link https://github.com/etsy/statsd/blob/master/docs/metric_types.md StatsD Metric Types @endlink
  *   :
@@ -40,7 +40,7 @@ function logger_hook_info_alter(&$hooks) {
  *   - set: The corresponding value is a value to add to a set of unique values.
  *   - time: The corresponding value is a duration in milliseconds.
  * @param int $value
- *   (optional) The numeric value you wish to log. Defaults to 1.
+ *   (Optional) The numeric value you wish to log. Defaults to 1.
  *
  * @see hook_logger_event()
  */
@@ -74,7 +74,7 @@ function logger_event($name, $type = 'count', $value = 1) {
  * @param string $process_name
  *   The 'process_name' component used in the logger event name.
  * @param string $group
- *   (optional) The 'group' component used in the logger event name. Defaults to
+ *   (Optional) The 'group' component used in the logger event name. Defaults to
  *   'logger'.
  */
 function logger_log_process_start($process_name, $group = 'logger') {
@@ -91,10 +91,10 @@ function logger_log_process_start($process_name, $group = 'logger') {
  * @param string $process_name
  *   The 'process_name' component used in the logger event name.
  * @param string $group
- *   (optional) The 'group' component used in the logger event name. Defaults to
+ *   (Optional) The 'group' component used in the logger event name. Defaults to
  *   'logger'.
  * @param string $status
- *   (optional) The 'status' component used in the logger event name. Defaults
+ *   (Optional) The 'status' component used in the logger event name. Defaults
  *   to 'ok'.
  */
 function logger_log_process_end($process_name, $group = 'logger', $status = 'ok') {

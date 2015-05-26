@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Test implementation of hook_logger_event(), used for simpletest.
+ * Support module for logger testing.
  */
 
 /**
