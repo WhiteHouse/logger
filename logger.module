@@ -79,8 +79,8 @@ function logger_event($name, $type = 'count', $value = 1) {
  */
 function logger_process_start($name, $group = 'logger') {
   // Cleanup existing timers with the same name to prevent accumulation.
-  $timer_name = logger_process_timer_name($name);
-  logger_timer_destroy($timer_name);
+  $timer_name = _logger_process_timer_name($name);
+  _logger_timer_destroy($timer_name);
   logger_event("processes.{$group}.{$name}.invoked");
   timer_start($timer_name);
 }
@@ -98,12 +98,12 @@ function logger_process_start($name, $group = 'logger') {
  *   to 'ok'.
  */
 function logger_process_end($name, $group = 'logger', $status = 'ok') {
-  $timer_name = logger_process_timer_name($name);
+  $timer_name = _logger_process_timer_name($name);
   timer_stop($timer_name);
   logger_event("processes.{$group}.{$name}.time_to_complete", 'time', (int) timer_read($timer_name));
   logger_event("processes.{$group}.{$name}.completed");
   logger_event("processes.{$group}.{$name}.statuses.{$status}");
-  logger_timer_destroy($timer_name);
+  _logger_timer_destroy($timer_name);
 }
 
 /**
@@ -115,10 +115,8 @@ function logger_process_end($name, $group = 'logger', $status = 'ok') {
  * @return string
  *   The formatted timer name.
  */
-function logger_process_timer_name($process_name) {
-  if (is_string($process_name)) {
-    return 'logger_process_timer_' . $process_name;
-  }
+function _logger_process_timer_name($process_name) {
+  return "logger_process_timer_{$process_name}";
 }
 
 /**
@@ -127,6 +125,6 @@ function logger_process_timer_name($process_name) {
  * @param string $timer_name
  *   The name of the timer to destroy.
  */
-function logger_timer_destroy($timer_name) {
+function _logger_timer_destroy($timer_name) {
   unset($GLOBALS['timers'][$timer_name]);
 }
