@@ -48,12 +48,26 @@ function logger_event($name, $type = 'count', $value = 1) {
   // Assert valid event type.
   $valid_types = array('count', 'gauge', 'set', 'time');
   if (!in_array($type, $valid_types)) {
-    throw new InvalidArgumentException(sprintf('Invalid event type: "%s".', $type));
+    $backtrace = debug_backtrace();
+    if (isset($backtrace['1']['file']) && isset($backtrace['1']['line'])) {
+      $message = sprintf('Invalid event type: "%s" in %s on line %s.', $type, $backtrace['1']['file'], $backtrace['1']['line']);
+    }
+    else {
+      $message = sprintf('Invalid event type: "%s".', $type);
+    }
+    throw new InvalidArgumentException($message);
   }
 
   // Assert valid event value.
   if (!is_int($value)) {
-    throw new InvalidArgumentException(sprintf('Invalid event value: "%s".', $value));
+    $backtrace = debug_backtrace();
+    if (isset($backtrace['1']['file']) && isset($backtrace['1']['line'])) {
+      $message = sprintf('Invalid event value: "%s" in %s on line %s.', $value, $backtrace['1']['file'], $backtrace['1']['line']);
+    }
+    else {
+      $message = sprintf('Invalid event value: "%s".', $value);
+    }
+    throw new InvalidArgumentException($message);
   }
 
   // Conditionally log events to watchdog for debugging purposes.
